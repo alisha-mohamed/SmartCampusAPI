@@ -3,7 +3,7 @@ A fully RESTful API built using **JAX-RS (Jersey 2.41)** and **Apache Tomcat 9**
 
 ---
 
-## 🌐 API Overview
+## API Overview
 
 The Smart Campus API provides a seamless interface for campus facilities managers and automated building systems to interact with campus data. It supports full CRUD operations on three core resources:
 
@@ -16,7 +16,8 @@ The Smart Campus API provides a seamless interface for campus facilities manager
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
+
 
 ![Java](https://img.shields.io/badge/Java-11-orange?style=for-the-badge&logo=java)
 ![Jersey](https://img.shields.io/badge/Jersey-2.41-blue?style=for-the-badge)
