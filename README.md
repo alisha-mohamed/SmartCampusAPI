@@ -18,7 +18,6 @@ The Smart Campus API provides a seamless interface for campus facilities manager
 
 ## Technology Stack
 
-
 ![Java](https://img.shields.io/badge/Java-11-orange?style=for-the-badge&logo=java)
 ![Jersey](https://img.shields.io/badge/Jersey-2.41-blue?style=for-the-badge)
 ![Tomcat](https://img.shields.io/badge/Tomcat-9-yellow?style=for-the-badge&logo=apachetomcat)
@@ -36,3 +35,37 @@ The Smart Campus API provides a seamless interface for campus facilities manager
 | ConcurrentHashMap | Thread-safe in-memory data structure used as the application's database |
 
 ---
+
+## Architecture
+
+The API follows a layered architecture pattern where each layer has a specific responsibility
+
+┌─────────────────────────────────────┐
+│           JAX-RS / Jersey            │
+│     Request Routing via @Path        │
+└────────────────┬────────────────────┘
+↓
+┌─────────────────────────────────────┐
+│         Resource Layer               │
+│  DiscoveryResource, RoomResource,    │
+│  SensorResource, SensorReadingResource│
+└────────────────┬────────────────────┘
+↓
+┌─────────────────────────────────────┐
+│           Model Layer                │
+│    Room, Sensor, SensorReading       │
+└────────────────┬────────────────────┘
+↓
+┌─────────────────────────────────────┐
+│            Data Layer                │
+│   DataStore (ConcurrentHashMap)      │
+└─────────────────────────────────────┘
+Cross-Cutting Concerns (apply across all layers):
+┌─────────────────────────────────────┐
+│  Exception Mappers                   │
+│  403, 404, 409, 422, 500             │
+├─────────────────────────────────────┤
+│  Logging Filter                      │
+│  Logs all requests and responses     │
+└─────────────────────────────────────┘
+
