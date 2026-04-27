@@ -109,6 +109,64 @@ cd SmartCampusAPI
 http://localhost:8080/SmartCampusAPI/api/v1
 ```
 
+## API Endpoints
+
+### Discovery
+
+#### `GET /`
+Returns API metadata so clients can explore available resources without hardcoded URLs.
+
+**Response:**
+```json
+{
+  "api": "Smart Campus API",
+  "version": "v1",
+  "description": "RESTful API for managing campus rooms and sensors",
+  "contact": "admin@smartcampus.ac.uk",
+  "links": {
+    "rooms": "/api/v1/rooms",
+    "sensors": "/api/v1/sensors"
+  }
+}
+```
+---
+### Rooms
+
+| Method | Endpoint | Description | Status |
+|--------|----------|-------------|--------|
+| GET | `/rooms` | List all rooms | 200 |
+| GET | `/rooms/{roomId}` | Get a specific room | 200 / 404 |
+| POST | `/rooms` | Create a new room | 201 / 409 |
+| DELETE | `/rooms/{roomId}` | Delete a room | 204 / 404 / 409 |
+
+#### `GET /rooms`
+Returns a list of all registered rooms.
+
+#### `GET /rooms/{roomId}`
+Returns a single room by its ID. Returns `404` if the room does not exist.
+
+#### `POST /rooms`
+Creates a new room. Returns `409 Conflict` if the ID is already taken.
+
+**Request body:**
+```json
+{
+  "id": "CS-101",
+  "name": "Computer Science Lab",
+  "capacity": 30
+}
+```
+
+**Response:**
+```json
+{
+  "id": "CS-101",
+  "name": "Computer Science Lab",
+  "capacity": 30,
+  "sensorIds": []
+}
+```
+
 ---
 
 ## Curl Commands
