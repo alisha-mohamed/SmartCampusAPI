@@ -40,23 +40,21 @@ The Smart Campus API provides a seamless interface for campus facilities manager
 
 The API follows a layered architecture pattern where each layer has a specific responsibility
 
-<div align="center">
-
 **JAX-RS / Jersey** → Routes incoming HTTP requests to the correct resource class via `@Path` annotations
-
+<div align="center">
 ↓
-
+</div>
 **Resource Layer** → Handles business logic (`DiscoveryResource`, `RoomResource`, `SensorResource`, `SensorReadingResource`)
-
+<div align="center">
 ↓
-
+</div>
 **Model Layer** → Defines core data entities (`Room`, `Sensor`, `SensorReading`)
-
+<div align="center">
 ↓
-
+</div>
 **Data Layer** → `DataStore` singleton manages all in-memory data using thread-safe `ConcurrentHashMap`
 
-</div>
+
 
 **Cross-Cutting Concerns** (apply across all layers):
 - **Logging Filter** – Logs every incoming request method/URI and outgoing response status code
