@@ -64,6 +64,48 @@ HTTP Request
 3. **Exception Mapper Pattern** – Custom `ExceptionMapper` implementations intercept specific exceptions and convert them into structured HTTP responses, ensuring the API never exposes raw stack traces
 4. **Filter Pattern** – `LoggingFilter` implements both `ContainerRequestFilter` and `ContainerResponseFilter` to apply logging as a cross-cutting concern across all endpoints without modifying business logic
 
-
 ---
+## How to Build and Run
+
+### Prerequisites
+- Java JDK 11 or higher
+- Apache Maven 3.6+
+- Apache Tomcat 9
+- NetBeans IDE (recommended)
+
+### Step-by-Step Instructions
+
+**Step 01 - Clone the repository:**
+```
+git clone https://github.com/alisha-mohamed/SmartCampusAPI.git
+cd SmartCampusAPI
+```
+**Step 02 - Open in Apache NetBeans:**
+- Launch Apache Netbeans
+- Click File → Open Project
+- Select the cloned folder
+
+**Step 03 - Add Tomcat Server (if not already added):**
+- Click **Tools** → **Servers** → **Add Server**
+- Select **Apache Tomcat or TomEE** and click Next
+- Browse to your Tomcat 9 installation directory
+- Set your credentials and click Finish
+
+**Step 04 - Build the project:**
+- Right-click **SmartCampusAPI** in the Projects panel
+- Select **Clean and Build**
+- Wait for the process to complete
+- Confirm `BUILD SUCCESS` in the output panel at the bottom
+
+**Step 05 - Run the project:**
+- Right-click **SmartCampusAPI** in the Projects panel
+- Select **Run**
+- Tomcat will start automatically and deploy the application
+- A browser window may open showing the default page
+
+**Step 06 - Access the API:**
+- Open your browser or Postman and navigate to:
+```
+http://localhost:8080/SmartCampusAPI/api/v1
+```
 
