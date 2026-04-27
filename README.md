@@ -39,7 +39,7 @@ The Smart Campus API provides a seamless interface for campus facilities manager
 ## Architecture
 
 The API follows a layered architecture pattern where each layer has a specific responsibility
-
+```
 HTTP Request
 ↓
 [Apache Tomcat 9]          ← Servlet container, hosts and deploys the application
@@ -55,7 +55,7 @@ HTTP Request
 [Exception Mappers]        ← Intercept thrown exceptions → return JSON error responses
 ↑
 [Logging Filter]           ← Logs every request and response automatically
-
+```
 
 ### Key Design Patterns
 
