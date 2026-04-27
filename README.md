@@ -109,3 +109,76 @@ cd SmartCampusAPI
 http://localhost:8080/SmartCampusAPI/api/v1
 ```
 
+---
+
+## 🔧 Sample curl Commands
+
+### 1. Discovery - Get API info
+```bash
+curl http://localhost:8080/SmartCampusAPI/api/v1
+```
+
+### 2. Get all rooms
+```bash
+curl http://localhost:8080/SmartCampusAPI/api/v1/rooms
+```
+
+### 3. Create a new room
+```bash
+curl -X POST -H "Content-Type: application/json" \
+-d '{"id":"CS-101","name":"Computer Science Lab","capacity":30}' \
+http://localhost:8080/SmartCampusAPI/api/v1/rooms
+```
+
+### 4. Get a specific room
+```bash
+curl http://localhost:8080/SmartCampusAPI/api/v1/rooms/LIB-301
+```
+
+### 5. Delete a room
+```bash
+curl -X DELETE http://localhost:8080/SmartCampusAPI/api/v1/rooms/CS-101
+```
+
+### 6. Get all sensors
+```bash
+curl http://localhost:8080/SmartCampusAPI/api/v1/sensors
+```
+
+### 7. Filter sensors by type
+```bash
+curl http://localhost:8080/SmartCampusAPI/api/v1/sensors?type=CO2
+```
+
+### 8. Register a new sensor
+```bash
+curl -X POST -H "Content-Type: application/json" \
+-d '{"id":"HUM-001","type":"Humidity","status":"ACTIVE","currentValue":55.0,"roomId":"LIB-301"}' \
+http://localhost:8080/SmartCampusAPI/api/v1/sensors
+```
+
+### 9. Get all readings for a sensor
+```bash
+curl http://localhost:8080/SmartCampusAPI/api/v1/sensors/TEMP-001/readings
+```
+
+### 10. Add a reading to a sensor
+```bash
+curl -X POST -H "Content-Type: application/json" \
+-d '{"value":450.5}' \
+http://localhost:8080/SmartCampusAPI/api/v1/sensors/CO2-001/readings
+```
+
+### 11. Test 409 - Try deleting a room with sensors
+```bash
+curl -X DELETE http://localhost:8080/SmartCampusAPI/api/v1/rooms/LIB-301
+```
+
+### 12. Test 422 - Register sensor with invalid room
+```bash
+curl -X POST -H "Content-Type: application/json" \
+-d '{"id":"TEST-001","type":"CO2","status":"ACTIVE","currentValue":0.0,"roomId":"FAKE-999"}' \
+http://localhost:8080/SmartCampusAPI/api/v1/sensors
+```
+
+---
