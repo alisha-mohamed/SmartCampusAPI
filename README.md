@@ -42,15 +42,15 @@ The API follows a layered architecture pattern where each layer has a specific r
 
 **JAX-RS / Jersey** → Routes incoming HTTP requests to the correct resource class via `@Path` annotations
 
-↓
+        ↓
 
 **Resource Layer** → Handles business logic (`DiscoveryResource`, `RoomResource`, `SensorResource`, `SensorReadingResource`)
 
-↓
+        ↓
 
 **Model Layer** → Defines core data entities (`Room`, `Sensor`, `SensorReading`)
 
-↓
+        ↓
 
 **Data Layer** → `DataStore` singleton manages all in-memory data using thread-safe `ConcurrentHashMap`
 
@@ -60,10 +60,10 @@ The API follows a layered architecture pattern where each layer has a specific r
 
 ### Key Design Patterns
 
-- **Singleton Pattern** – `DataStore` is instantiated once and shared across all resource classes, ensuring consistent data access throughout the application lifecycle
-- **Sub-Resource Locator Pattern** – `SensorResource` delegates reading-related requests to `SensorReadingResource`, promoting separation of concerns and keeping resource classes focused
-- **Exception Mapper Pattern** – Custom `ExceptionMapper` implementations intercept specific exceptions and convert them into structured HTTP responses, ensuring the API never exposes raw stack traces
-- **Filter Pattern** – `LoggingFilter` implements both `ContainerRequestFilter` and `ContainerResponseFilter` to apply logging as a cross-cutting concern across all endpoints without modifying business logic
+1. **Singleton Pattern** – `DataStore` is instantiated once and shared across all resource classes, ensuring consistent data access throughout the application lifecycle
+2. **Sub-Resource Locator Pattern** – `SensorResource` delegates reading-related requests to `SensorReadingResource`, promoting separation of concerns and keeping resource classes focused
+3. **Exception Mapper Pattern** – Custom `ExceptionMapper` implementations intercept specific exceptions and convert them into structured HTTP responses, ensuring the API never exposes raw stack traces
+4. **Filter Pattern** – `LoggingFilter` implements both `ContainerRequestFilter` and `ContainerResponseFilter` to apply logging as a cross-cutting concern across all endpoints without modifying business logic
 
 
 ---
