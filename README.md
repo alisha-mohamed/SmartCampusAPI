@@ -111,74 +111,73 @@ http://localhost:8080/SmartCampusAPI/api/v1
 
 ---
 
-## 🔧 Sample curl Commands
+## Curl Commands
 
-### 1. Discovery - Get API info
+All commands below assume the server is running on `http://localhost:8080`
+
+### Discovery
 ```bash
-curl http://localhost:8080/SmartCampusAPI/api/v1
+# Check the API is running
+curl -X GET http://localhost:8080/SmartCampusAPI/api/v1
 ```
 
-### 2. Get all rooms
+### Rooms
 ```bash
-curl http://localhost:8080/SmartCampusAPI/api/v1/rooms
-```
+# List all rooms (includes pre-seeded LIB-301 and LAB-101)
+curl -X GET http://localhost:8080/SmartCampusAPI/api/v1/rooms
 
-### 3. Create a new room
-```bash
-curl -X POST -H "Content-Type: application/json" \
--d '{"id":"CS-101","name":"Computer Science Lab","capacity":30}' \
-http://localhost:8080/SmartCampusAPI/api/v1/rooms
-```
+# Get a specific room
+curl -X GET http://localhost:8080/SmartCampusAPI/api/v1/rooms/LIB-301
 
-### 4. Get a specific room
-```bash
-curl http://localhost:8080/SmartCampusAPI/api/v1/rooms/LIB-301
-```
+# Create a new room
+curl -X POST http://localhost:8080/SmartCampusAPI/api/v1/rooms \
+  -H "Content-Type: application/json" \
+  -d "{\"id\":\"HALL-201\",\"name\":\"Main Hall\",\"capacity\":100}"
 
-### 5. Delete a room
-```bash
-curl -X DELETE http://localhost:8080/SmartCampusAPI/api/v1/rooms/CS-101
-```
+# Delete a room (only works if it has no sensors)
+curl -X DELETE http://localhost:8080/SmartCampusAPI/api/v1/rooms/HALL-201
 
-### 6. Get all sensors
-```bash
-curl http://localhost:8080/SmartCampusAPI/api/v1/sensors
-```
-
-### 7. Filter sensors by type
-```bash
-curl http://localhost:8080/SmartCampusAPI/api/v1/sensors?type=CO2
-```
-
-### 8. Register a new sensor
-```bash
-curl -X POST -H "Content-Type: application/json" \
--d '{"id":"HUM-001","type":"Humidity","status":"ACTIVE","currentValue":55.0,"roomId":"LIB-301"}' \
-http://localhost:8080/SmartCampusAPI/api/v1/sensors
-```
-
-### 9. Get all readings for a sensor
-```bash
-curl http://localhost:8080/SmartCampusAPI/api/v1/sensors/TEMP-001/readings
-```
-
-### 10. Add a reading to a sensor
-```bash
-curl -X POST -H "Content-Type: application/json" \
--d '{"value":450.5}' \
-http://localhost:8080/SmartCampusAPI/api/v1/sensors/CO2-001/readings
-```
-
-### 11. Test 409 - Try deleting a room with sensors
-```bash
+# Attempt to delete a room that has sensors → expect 409 Conflict
 curl -X DELETE http://localhost:8080/SmartCampusAPI/api/v1/rooms/LIB-301
 ```
 
-### 12. Test 422 - Register sensor with invalid room
+### Sensors
 ```bash
-curl -X POST -H "Content-Type: application/json" \
--d '{"id":"TEST-001","type":"CO2","status":"ACTIVE","currentValue":0.0,"roomId":"FAKE-999"}' \
-http://localhost:8080/SmartCampusAPI/api/v1/sensors
+# List all sensors
+curl -X GET http://localhost:8080/SmartCampusAPI/api/v1/sensors
+
+# Filter sensors by type (case-insensitive)
+curl -X GET "http://localhost:8080/SmartCampusAPI/api/v1/sensors?type=CO2"
+curl -X GET "http://localhost:8080/SmartCampusAPI/api/v1/sensors?type=temperature"
+
+# Get a specific sensor
+curl -X GET http://localhost:8080/SmartCampusAPI/api/v1/sensors/TEMP-001
+
+# Register a new sensor in an existing room
+curl -X POST http://localhost:8080/SmartCampusAPI/api/v1/sensors \
+  -H "Content-Type: application/json" \
+  -d "{\"id\":\"HUM-001\",\"type\":\"Humidity\",\"status\":\"ACTIVE\",\"currentValue\":60.0,\"roomId\":\"LIB-301\"}"
+
+# Attempt to register sensor in a non-existent room → expect 422
+curl -X POST http://localhost:8080/SmartCampusAPI/api/v1/sensors \
+  -H "Content-Type: application/json" \
+  -d "{\"id\":\"HUM-002\",\"type\":\"Humidity\",\"status\":\"ACTIVE\",\"currentValue\":55.0,\"roomId\":\"FAKE-999\"}"
+```
+
+### Sensor Readings
+```bash
+# Get all readings for a sensor
+curl -X GET http://localhost:8080/SmartCampusAPI/api/v1/sensors/TEMP-001/readings
+
+# Add a new reading to a sensor
+curl -X POST http://localhost:8080/SmartCampusAPI/api/v1/sensors/TEMP-001/readings \
+  -H "Content-Type: application/json" \
+  -d "{\"value\":25.3}"
+
+# Attempt to add reading to a MAINTENANCE sensor → expect 403
+curl -X POST http://localhost:8080/SmartCampusAPI/api/v1/sensors/CO2-001/readings \
+  -H "Content-Type: application/json" \
+  -d "{\"value\":450.5}"
 ```
 
 ---
