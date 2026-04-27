@@ -58,5 +58,13 @@ The API follows a layered architecture pattern where each layer has a specific r
 - **Logging Filter** – Logs every incoming request method/URI and outgoing response status code
 - **Exception Mappers** – Intercept exceptions and return structured JSON error responses (403, 404, 409, 422, 500)
 
+### Key Design Patterns
+
+- **Singleton Pattern** – `DataStore` is instantiated once and shared across all resource classes, ensuring consistent data access throughout the application lifecycle
+- **Sub-Resource Locator Pattern** – `SensorResource` delegates reading-related requests to `SensorReadingResource`, promoting separation of concerns and keeping resource classes focused
+- **Exception Mapper Pattern** – Custom `ExceptionMapper` implementations intercept specific exceptions and convert them into structured HTTP responses, ensuring the API never exposes raw stack traces
+- **Filter Pattern** – `LoggingFilter` implements both `ContainerRequestFilter` and `ContainerResponseFilter` to apply logging as a cross-cutting concern across all endpoints without modifying business logic
+
+
 ---
 
