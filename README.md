@@ -361,3 +361,14 @@ Adds a new reading to a sensor. Reading ID and timestamp are auto-generated. Als
 ```json
 { "error": "Sensor 'TEMP-001' not found." }
 ```
+
+## Report - Question Answers
+
+### Part 1.1 - JAX-RS Resource Class Lifecycle
+
+JAX-RS creates a new instance of every resource class for every incoming HTTP request by default. This is known as per-request scope. In the SmartCampusAPI system, classes such as RoomResource, SensorResource, and SensorReadingResource are all per-request scoped. This indicates that each HTTP request gets its own fresh instance of the relevant class, and once the response is sent it is discarded. Hence, a new instance is instantiated for every incoming request and not treated as a singleton. 
+
+This architectural decision directly impacts how shared data must be managed. Since each resource instance is discarded after a response is sent, any data stored inside the resource class would be lost between API calls, this makes it impossible to maintain state across requests. This is why all resource classes delegate to the shared DataStore.getInstance() singleton, which contains all rooms, sensors, and readings in-memory across requests.
+
+This is where thread safety becomes a concern, as multiple requests can arrive simultaneously and all read from or write to the same maps. For example, two simultaneous POST /rooms requests could both pass the duplicate ID check before either has inserted its entry, resulting in one overwriting the other and causing data loss. To handle this, the DataStore uses ConcurrentHashMap, which handles concurrent reads and writes safely without needing explicit synchronized blocks. Thereby, preventing data loss and corruption under concurrent load.
+---
