@@ -174,68 +174,190 @@ Creates a new room. Returns `409 Conflict` if the ID is already taken.
 All commands below assume the server is running on `http://localhost:8080`
 
 ### Discovery
-```bash
-# Check the API is running
-curl -X GET http://localhost:8080/SmartCampusAPI/api/v1
-```
 
-### Rooms
-```bash
-# List all rooms (includes pre-seeded LIB-301 and LAB-101)
-curl -X GET http://localhost:8080/SmartCampusAPI/api/v1/rooms
+`GET /api/v1`
 
-# Get a specific room
-curl -X GET http://localhost:8080/SmartCampusAPI/api/v1/rooms/LIB-301
+Returns API metadata and navigation links to all available resources.
 
-# Create a new room
-curl -X POST http://localhost:8080/SmartCampusAPI/api/v1/rooms \
-  -H "Content-Type: application/json" \
-  -d "{\"id\":\"HALL-201\",\"name\":\"Main Hall\",\"capacity\":100}"
-
-# Delete a room (only works if it has no sensors)
-curl -X DELETE http://localhost:8080/SmartCampusAPI/api/v1/rooms/HALL-201
-
-# Attempt to delete a room that has sensors → expect 409 Conflict
-curl -X DELETE http://localhost:8080/SmartCampusAPI/api/v1/rooms/LIB-301
-```
-
-### Sensors
-```bash
-# List all sensors
-curl -X GET http://localhost:8080/SmartCampusAPI/api/v1/sensors
-
-# Filter sensors by type (case-insensitive)
-curl -X GET "http://localhost:8080/SmartCampusAPI/api/v1/sensors?type=CO2"
-curl -X GET "http://localhost:8080/SmartCampusAPI/api/v1/sensors?type=temperature"
-
-# Get a specific sensor
-curl -X GET http://localhost:8080/SmartCampusAPI/api/v1/sensors/TEMP-001
-
-# Register a new sensor in an existing room
-curl -X POST http://localhost:8080/SmartCampusAPI/api/v1/sensors \
-  -H "Content-Type: application/json" \
-  -d "{\"id\":\"HUM-001\",\"type\":\"Humidity\",\"status\":\"ACTIVE\",\"currentValue\":60.0,\"roomId\":\"LIB-301\"}"
-
-# Attempt to register sensor in a non-existent room → expect 422
-curl -X POST http://localhost:8080/SmartCampusAPI/api/v1/sensors \
-  -H "Content-Type: application/json" \
-  -d "{\"id\":\"HUM-002\",\"type\":\"Humidity\",\"status\":\"ACTIVE\",\"currentValue\":55.0,\"roomId\":\"FAKE-999\"}"
-```
-
-### Sensor Readings
-```bash
-# Get all readings for a sensor
-curl -X GET http://localhost:8080/SmartCampusAPI/api/v1/sensors/TEMP-001/readings
-
-# Add a new reading to a sensor
-curl -X POST http://localhost:8080/SmartCampusAPI/api/v1/sensors/TEMP-001/readings \
-  -H "Content-Type: application/json" \
-  -d "{\"value\":25.3}"
-
-# Attempt to add reading to a MAINTENANCE sensor → expect 403
-curl -X POST http://localhost:8080/SmartCampusAPI/api/v1/sensors/CO2-001/readings \
-  -H "Content-Type: application/json" \
-  -d "{\"value\":450.5}"
+**Response:** `200 OK`
+```json
+{
+  "api": "Smart Campus API",
+  "version": "v1",
+  "description": "RESTful API for managing campus rooms and sensors",
+  "contact": "admin@smartcampus.ac.uk",
+  "links": {
+    "rooms": "/api/v1/rooms",
+    "sensors": "/api/v1/sensors"
+  }
+}
 ```
 
 ---
+
+### Rooms
+`GET /api/v1/rooms`
+
+Returns a list of all rooms currently registered in the system.
+
+**Response:** `200 OK`
+```json
+[
+  { "id": "LIB-301", "name": "Library Quiet Study", "capacity": 50, "sensorIds": ["TEMP-001"] },
+  { "id": "CS-101", "name": "Computer Science Lab", "capacity": 30, "sensorIds": [] }
+]
+```
+
+---
+
+`GET /api/v1/rooms/{roomId}`
+
+Returns a single room by its ID.
+
+**Response:** `200 OK`
+```json
+{ "id": "LIB-301", "name": "Library Quiet Study", "capacity": 50, "sensorIds": ["TEMP-001"] }
+```
+
+**Response:** `404 Not Found`
+```json
+{ "error": "Room not found" }
+```
+
+---
+
+`POST /api/v1/rooms`
+
+Registers a new room. Returns `409` if a room with that ID already exists.
+
+**Request body:**
+```json
+{ "id": "CS-101", "name": "Computer Science Lab", "capacity": 30 }
+```
+
+**Response:** `201 Created`
+```json
+{ "id": "CS-101", "name": "Computer Science Lab", "capacity": 30, "sensorIds": [] }
+```
+
+**Response:** `409 Conflict`
+```json
+{ "error": "Room with this ID already exists" }
+```
+
+---
+
+`DELETE /api/v1/rooms/{roomId}`
+
+Deletes a room by ID. Blocked if the room still has sensors assigned to it.
+
+**Response:** `204 No Content` — room successfully deleted, no body returned.
+
+**Response:** `404 Not Found`
+```json
+{ "error": "Room not found" }
+```
+
+**Response:** `409 Conflict`
+```json
+{ "error": "Conflict", "message": "Room 'LIB-301' cannot be deleted as it still has sensors assigned." }
+```
+
+---
+
+### Sensors
+
+`GET /api/v1/sensors`
+
+Returns all sensors. Filter by type using the optional `?type=` query parameter — case-insensitive.
+
+**Response:** `200 OK`
+```json
+[
+  { "id": "TEMP-001", "type": "Temperature", "status": "ACTIVE", "currentValue": 22.5, "roomId": "LIB-301" },
+  { "id": "CO2-001", "type": "CO2", "status": "ACTIVE", "currentValue": 412.0, "roomId": "LIB-301" }
+]
+```
+`GET /api/v1/sensors/{sensorId}`
+
+Returns a single sensor by its ID.
+
+**Response:** `200 OK`
+```json
+{ "id": "TEMP-001", "type": "Temperature", "status": "ACTIVE", "currentValue": 22.5, "roomId": "LIB-301" }
+```
+
+**Response:** `404 Not Found`
+```json
+{ "error": "Sensor 'TEMP-001' not found." }
+```
+
+---
+`POST /api/v1/sensors`
+
+Registers a new sensor. The `roomId` must reference an existing room. Status defaults to `ACTIVE` if not provided.
+
+**Request body:**
+```json
+{ "id": "HUM-001", "type": "Humidity", "status": "ACTIVE", "currentValue": 55.0, "roomId": "LIB-301" }
+```
+
+**Response:** `201 Created`
+```json
+{ "id": "HUM-001", "type": "Humidity", "status": "ACTIVE", "currentValue": 55.0, "roomId": "LIB-301" }
+```
+
+**Response:** `409 Conflict`
+```json
+{ "error": "Sensor 'HUM-001' already exists." }
+```
+
+**Response:** `422 Unprocessable Entity`
+```json
+{ "error": "Unprocessable Entity", "message": "Room 'FAKE-999' does not exist. Cannot register sensor." }
+```
+
+---
+
+### Sensor Readings
+`GET /api/v1/sensors/{sensorId}/readings`
+
+Returns the full reading history for a sensor. Returns an empty list if no readings exist yet.
+
+**Response:** `200 OK`
+```json
+[
+  { "id": "a3f1c...", "timestamp": 1714123456789, "value": 22.5 },
+  { "id": "b9e2d...", "timestamp": 1714123512345, "value": 23.1 }
+]
+```
+
+**Response:** `404 Not Found`
+```json
+{ "error": "Sensor 'TEMP-001' not found." }
+```
+
+---
+`POST /api/v1/sensors/{sensorId}/readings`
+
+Adds a new reading to a sensor. Reading ID and timestamp are auto-generated. Also updates the parent sensor's `currentValue`. Blocked if the sensor is in `MAINTENANCE` status.
+
+**Request body:**
+```json
+{ "value": 450.5 }
+```
+
+**Response:** `201 Created`
+```json
+{ "id": "a3f1c...", "timestamp": 1714123456789, "value": 450.5 }
+```
+
+**Response:** `403 Forbidden`
+```json
+{ "error": "Forbidden", "message": "Sensor 'TEMP-001' is currently under MAINTENANCE and cannot accept new readings." }
+```
+
+**Response:** `404 Not Found`
+```json
+{ "error": "Sensor 'TEMP-001' not found." }
+```
