@@ -458,9 +458,42 @@ Jersey detects that the method returns a resource instance rather than a respons
 
 ### Part 5.2 - HTTP 422 vs HTTP 404
 
-404 Not Found: The requested URL or endpoint does not exist on the server.
-422 Unprocessable Entity: The endpoint exists and the request is syntactically valid, but the server cannot process it due to semantic or business rule violations in the request body.
+- 404 Not Found: The requested URL or endpoint does not exist on the server.
+- 422 Unprocessable Entity: The endpoint exists and the request is syntactically valid, but the server cannot process it due to semantic or business rule violations in the request body.
 
+HTTP 404 Not Found indicates a routing issue, meaning the client has accessed an invalid or non-existent endpoint. In contrast, HTTP 422 Unprocessable Entity indicates that the request has reached a valid endpoint, but the data provided within the request is logically incorrect or violates application constraints.
 
+In this scenario, a 422 response is more appropriate when a `roomId` provided in a POST `/api/v1/sensors` request does not exist. The endpoint `/api/v1/sensors` is valid, and the JSON structure is correct, so the issue is not with the request format or URL, but with the meaning of the data being sent.
+
+Overall, 422 is more semantically accurate because it distinguishes between routing errors (404) and data validation or business logic errors, providing clearer feedback to the client.
+
+---
+
+### Part 5.4 - Security Risks of Exposing Stack Traces
+
+Exposing raw Java stack traces in API responses is a significant security risk because they reveal internal implementation details that attackers can exploit.
+
+1. **Dependency and version disclosure**
+   Stack traces can reveal library names and versions (e.g., Jersey, Jackson). Attackers can use this information to identify known vulnerabilities (CVEs) and target outdated or insecure dependencies.
+
+2. **Internal system structure exposure**
+   They may expose package names, class names, and method names (e.g., `com.smartcampus.store.DataStore`). This gives attackers insight into the application architecture and how different components interact.
+
+3. **Insight into application behaviour and logic flaws**
+   Stack traces show execution paths and failure points, helping attackers understand how the system behaves under invalid input. This can assist in crafting inputs that trigger errors or exploit weak validation logic.
+
+In this project, `GlobalExceptionMapper` implements `ExceptionMapper<Throwable>`, ensuring that all unhandled exceptions are centrally managed. While full stack traces are logged on the server for debugging purposes, the API response returns only a generic `500 Internal Server Error` message without exposing any internal details. This prevents information leakage while still allowing developers to investigate issues through server logs.
+
+---
+
+### Part 5.5 - JAX-RS Filters vs Manual Logging
+
+A cross-cutting concern is functionality that applies across multiple parts of an application, such as logging, authentication, or error handling. Logging is a good example because it is required for all or most endpoints.
+
+Manually adding `Logger.info()` statements inside every resource method is inefficient and difficult to maintain. It leads to duplicated code, and if the logging format or behaviour needs to change, every endpoint must be updated individually. This increases the risk of inconsistency and human error across the application.
+
+JAX-RS filters provide a better solution by centralising this logic in one place. A class implementing `ContainerRequestFilter` or `ContainerResponseFilter`, annotated with `@Provider`, is automatically applied to all incoming or outgoing requests by the JAX-RS runtime. This means logging can be handled globally without modifying any resource classes.
+
+This approach improves maintainability, ensures consistency in logging behaviour, and makes the system easier to extend. It also keeps resource classes focused on business logic rather than infrastructure concerns, resulting in a cleaner and more modular design.
 
 
