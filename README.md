@@ -361,6 +361,7 @@ Adds a new reading to a sensor. Reading ID and timestamp are auto-generated. Als
 ```json
 { "error": "Sensor 'TEMP-001' not found." }
 ```
+---
 
 ## Report - Question Answers
 
@@ -389,6 +390,76 @@ Key benefits of HATEOAS include:
 ---
 
 ### Part 2.1 - Returning IDs vs Full Objects
+
+Returning only IDs:
+- Uses less network bandwith because the response payload is smaller, which is useful when dealing with large collections.
+- However, the client must make additional requests to retrieve full details for each room, increasing the number of network round trips and overall latency.
+- This also increases client-side processing, as the client has to manage and combine multiple responses.
+
+Returning full room objects (Current Implementation):
+- Increases the size of the response payload, which may affect performance if the data is large or complex.
+- Reduces the need for multiple requests, since all required information is returned in a single call.
+- Simplifies client-side processing, as no additional requests or data aggregation are needed.
+
+In this project, `RoomResource.getAllRooms()` returns full room objects using `new ArrayList<>(store.getRooms().values())`. This is an appropriate design choice because each room object is relatively small (containing only `id`, `name`, `capacity`, and `sensorIds`). As a result, returning full objects is the better approach, as it minimises network round trips and reduces client-side complexity while keeping bandwidth usage at an acceptable level.
+
+---
+
+### Part 2.2 - DELETE Idempotency
+
+Yes, the  `DELETE ` operation is idempotent in this implementation. Idempotency means that making the same request multiple times produces the same server state as making it once. The server does not end up in a different state no matter how many times the request is repeated.
+
+In the implementation, if a client sends `DELETE /api/v1/rooms/LAB-101` and the room is successfully deleted, the server removes if from the `DataStore` and returns a `200 OK`. If the same client mistakenly send the exact same request again, the room no longer exists in the `DataStore` so `RoomResource.deleteRoom()` returns `404 Not Found`. Most importantly, the server state has not changes, the room is still gone, no data modification occured, and nothing was duplicated. The only difference is that the response code changed from a `200` to a `400`.
+
+---
+
+### Part 3.1 - @Consumes Annotation Behaviour
+
+In the SmartCampusAPI system the `POST` methods in `RoomResource` and `SensorResource` are annotated with `@Consumes(MediaType.APPLICATION_JSON)`. This specifies that these endpoints only accept requests with a `Content-Type: application/json header`. If a client sends data in a different format, such as `text/plain` or `application/xml`, JAX-RS detects a mismatch between the request’s `Content-Type` and the media types supported by the resource method. As a result, the framework automatically rejects the request and returns a `415 Unsupported Media Type` response.
+
+Consequently, the method is never invoked, the request body is not deserialised, and no interaction with the `DataStore` takes place. This prevents the application from processing incompatible data formats and ensures robustness. Overall, JAX-RS enforces the `@Consumes` constraint through automatic content negotiation, ensuring that only supported media types are processed by the application.
+
+---
+
+### Part 3.2 - @QueryParam vs Path Parameter for Filtering
+
+Path parameters are intended to identify a specific, unique resource (for example, `/sensors/{sensorId}`), whereas query parameters are used for filtering, searching, and refining collections. Using a path such as `/api/v1/sensors/type/CO2` incorrectly treats the filter value (`CO2`) as part of the resource identity rather than as a constraint applied to a collection.
+
+The query parameter approach (for example, `/api/v1/sensors?type=CO2`) is generally considered superior for filtering and searching because it preserves correct REST semantics. The path continues to represent the resource collection (`/sensors`), while query parameters modify the result set without changing the resource being addressed.
+
+Additionally, query parameters provide greater flexibility. Multiple filters can be easily combined (for example, `/sensors?type=CO2&status=active`), and parameters can be optional, allowing the same endpoint to support both filtered and unfiltered requests. This avoids the need to define multiple rigid URL structures for different filter combinations.
+
+Overall, query parameters demonstrate a clean and extensible design that aligns with REST principles, making them a more appropriate choice for filtering and searching collections.
+
+---
+
+### Part 4.1 - Sub-Resource Locator Pattern
+
+The Sub-Resource Locator pattern is a JAX-RS feature that allows a parent resource class to delegate handling of nested paths to a separate child resource class, instead of managing all endpoints within a single controller. In this project, `SensorResource` is responsible for `/sensors` and `/sensors/{sensorId}`, but delegates `/sensors/{sensorId}/readings` to `SensorReadingResource` using a locator method:
+
+```java
+@Path("/{sensorId}/readings")
+public SensorReadingResource getReadingsResource(@PathParam("sensorId") String sensorId) {
+    return new SensorReadingResource(sensorId);
+}
+```
+
+Jersey detects that the method returns a resource instance rather than a response object, and therefore forwards the request to the appropriate method inside `SensorReadingResource`.
+
+### Why this approach is beneficial:
+
+-  **Separation of concerns** — `SensorResource` handles sensor-level operations, while `SensorReadingResource` manages all reading-related functionality. This ensures each class has a single responsibility.
+-  **Improved maintainability** — Prevents `SensorResource` from becoming overly large and complex as nested endpoints increase.
+-  **Clean context passing** — The `sensorId` is passed directly through the constructor, avoiding the need for repeated path parsing in the child resource.
+-  **Easier testing** — `SensorReadingResource` can be tested independently by instantiating it with a sensor ID, without requiring full HTTP request execution.
+-  **Scalability** — Additional nested resources (e.g., `/sensors/{sensorId}/readings/{readingId}`) can be added using further sub-resource locators without modifying existing logic.
+
+---
+
+### Part 5.2 - HTTP 422 vs HTTP 404
+
+404 Not Found: The requested URL or endpoint does not exist on the server.
+422 Unprocessable Entity: The endpoint exists and the request is syntactically valid, but the server cannot process it due to semantic or business rule violations in the request body.
 
 
 
